@@ -1,8 +1,9 @@
-from wordle_store import WordleStore
+from wordle.wordle_store import WordleStore
 from datetime import datetime, timedelta
 from os import remove
 from os.path import join
 import pytest
+
 
 @pytest.fixture()
 def w(tmp_path):
@@ -13,8 +14,10 @@ def w(tmp_path):
     except:
         pass
 
+
 def test_wordle_store_create(w):
     pass
+
 
 def test_add_score(w):
     d = datetime.now()
@@ -30,6 +33,7 @@ def test_add_score(w):
     assert r.nickname[0] == "nick"
     assert r.score[0] == 1
     assert r.date[0] == d
+
 
 def test_update_score(w):
     d = datetime.now()
@@ -53,6 +57,7 @@ def test_update_score(w):
     assert r.score[0] == 5
     assert r.date[0] == d
 
+
 def test_add_or_update_score(w):
     d = datetime.now()
     w.add_or_update_score(3, "nic", d, 2)
@@ -75,10 +80,13 @@ def test_add_or_update_score(w):
     assert r.score[0] == 5
     assert r.date[0] == d
 
+
 def test_weekly_leaderboard(w):
     d = datetime.today().date()
+
     def t(i=0):
         return d - timedelta(days=i)
+
     w.add_score(1, "n", t(), 0)
     w.add_score(1, "n", t(1), 1)
     w.add_score(1, "n", t(2), 2)
@@ -91,12 +99,14 @@ def test_weekly_leaderboard(w):
     r = w.get_weekly_leaderboard()
     print(r.date)
 
-    assert len(r) == d.weekday()+1
+    assert len(r) == d.weekday() + 1
     assert set(r.nickname) == {"n"}
-    assert set(r.score) == set(list(range(d.weekday()+1)))
+    assert set(r.score) == set(list(range(d.weekday() + 1)))
+
 
 def test_weekly_leaderboard_markdown(w):
     d = datetime.today().date()
+
     def t(i=0):
         return d - timedelta(days=i)
 
@@ -112,4 +122,3 @@ def test_weekly_leaderboard_markdown(w):
     assert isinstance(r, str)
 
     print(r)
-

@@ -1,7 +1,9 @@
 import re
 import os
 from datetime import datetime, timedelta
-from wordle_store import WordleStore
+from wordle.wordle_store import WordleStore
+
+flat_file = os.getenv('wordle_bot_flat_file', "wordle.db")
 
 EMOJIS = {
     0: "0️⃣",
@@ -12,6 +14,7 @@ EMOJIS = {
     5: "5️⃣",
     6: "6️⃣"
 }
+
 
 class WordleResult():
     def __init__(self, message):
@@ -75,14 +78,15 @@ class WordleResult():
         Returns:
             (datetime): Datetime of the wordle day
         """
-        return datetime.fromisoformat("2022-01-01") + timedelta(days=(self.day-196))
+        return datetime.fromisoformat("2022-01-01") + timedelta(days=(self.day - 196))
 
     def apply_score(self):
         """
         Apply the score for the given day
         """
-        ws = WordleStore()
-        ws.add_or_update_score(self.author.id, self.author.nick or self.author.name, self.actual_date, self.modified_score)
+        ws = WordleStore(db=flat_file)
+        ws.add_or_update_score(self.author.id, self.author.nick or self.author.name, self.actual_date,
+                               self.modified_score)
 
     async def show(self):
         """
@@ -92,4 +96,3 @@ class WordleResult():
         emoji = EMOJIS.get(self.modified_score)
 
         await self._message.add_reaction(emoji)
-

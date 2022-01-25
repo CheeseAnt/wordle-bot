@@ -2,8 +2,10 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, date as datetime_date, timedelta
 
+
 class WordleStore():
     def __init__(self, db='wordle.db'):
+        print(f"Connecting to '{db}'")
         self.con = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self.cur = self.con.cursor()
         self.create_tables()
@@ -79,7 +81,7 @@ class WordleStore():
             print(f"Added score {score} to user {nickname}")
         except sqlite3.IntegrityError:
             self.update_score(user_id, nickname, date, score)
-            print(f"Updated score {score} to user {nickname}") 
+            print(f"Updated score {score} to user {nickname}")
 
     def get_last_sunday(self):
         """
@@ -88,7 +90,7 @@ class WordleStore():
             (datetime): Last sunday
         """
         today = datetime.today()
-        sunday = today.date() - timedelta(days=today.weekday()+1)
+        sunday = today.date() - timedelta(days=today.weekday() + 1)
 
         return datetime.combine(sunday, datetime.min.time())
 
@@ -103,7 +105,7 @@ class WordleStore():
         last_sunday = self.get_last_sunday()
 
         if offset:
-            last_sunday = last_sunday - timedelta(days= 7 * abs(offset))
+            last_sunday = last_sunday - timedelta(days=7 * abs(offset))
 
         next_sunday = last_sunday + timedelta(days=7)
 
@@ -127,13 +129,13 @@ class WordleStore():
             (str): String of top three scores
         """
         df = self.get_weekly_leaderboard(offset=offset)
-        names = {r.user_id:r.nickname for r in df.itertuples()}
+        names = {r.user_id: r.nickname for r in df.itertuples()}
         df = df.groupby('user_id').sum()
         df.index = [names[d] for d in df.index]
         scores = list(set(df.score))
         scores.sort(reverse=True)
 
-        top_three = ""
+        top_three = "\n"
 
         def join_people(people):
             part = ", ".join(people[:-1])
@@ -146,19 +148,19 @@ class WordleStore():
             return part
 
         if len(scores) > 0:
-            people = list(df.loc[df.score==scores[0]].index)
+            people = list(df.loc[df.score == scores[0]].index)
             top_three = "👑 " + join_people(people) + "\n"
 
         if len(scores) > 1:
-            people = list(df.loc[df.score==scores[1]].index)
+            people = list(df.loc[df.score == scores[1]].index)
             top_three += "🏆 " + join_people(people) + "\n"
 
         if len(scores) > 2:
-            people = list(df.loc[df.score==scores[2]].index)
+            people = list(df.loc[df.score == scores[2]].index)
             top_three += "🎖" + join_people(people) + "\n"
 
         return top_three
-    
+
     def get_user_list(self):
         """
         Returns the list of user ids for this week
@@ -179,15 +181,15 @@ class WordleStore():
 
         if dat.empty:
             return "All outta scores"
-        
+
         # get all unique days
         dates = list(dat.date.unique())
         dates.sort()
-        
+
         # convert to day names (monday, tuesday etc)
         dates = pd.Series(dates).dt.day_name()
-        dat.index=dat.date.dt.day_name()
- 
+        dat.index = dat.date.dt.day_name()
+
         dat = dat.groupby('user_id')
 
         # assign columns and count totals
@@ -207,14 +209,13 @@ class WordleStore():
         table["totals"] = totals
         table.sort_index(inplace=True)
         table.sort_values(by="totals", ascending=False, inplace=True)
-        table.rename(columns={"totals":""}, inplace=True)
-        table.index.name = "UsEr"
+        table.rename(columns={"totals": ""}, inplace=True)
+        table.index.name = "User"
 
-        return f"`{table.to_markdown(index=True,tablefmt='pretty')}`"
+        return f"Weekly Standings: \n`{table.to_markdown(index=True, tablefmt='pretty')}`"
 
     def __del__(self):
         try:
             self.con.close()
         except Exception:
             pass
-
