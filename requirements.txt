@@ -1,0 +1,4 @@
+discord
+pandas
+pysqlite3
+tabulate
